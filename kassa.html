@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOOK coffee — Касса</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hover.css/2.3.1/css/hover-min.css">
+</head>
+
+<body>
+    <header>
+        <nav>
+            <div class="wrapper">
+                <div class="img"><img class="imgb"
+                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS4sqjHUqvOXZNYhyWkkF8RW7DEMa8KDqc_8RJWCRl8EAB4DTjmR_F4Z0w&s=10" alt=""></div>
+                <div class="li">
+                    <ul><a href="./index.html"><li class="hvr-float-shadow">Главная</li></a></ul>
+                    <ul><a href="./menu.html"><li class="hvr-float-shadow">Меню</li></a></ul>
+                    <ul><a href="./location.html"><li class="hvr-float-shadow">Локация</li></a></ul>
+                    <ul><a href="./kassa.html"><li class="hvr-float-shadow">Касса</li></a></ul>
+                </div>
+            </div>
+        </nav>
+        <div class="menu-hero">
+            <p class="desc4">Для персонала</p>
+            <p class="nasm">Касса BOOK coffee</p>
+        </div>
+    </header>
+
+    <main class="kassa-main">
+        <div class="kassa-note">
+            Это рабочий журнал заказов (хранится локально в этом браузере/устройстве). Он не списывает деньги сам —
+            для Click / Click Pass / Payme / карты сотрудник подтверждает получение денег в своём приложении
+            Click, Payme или на банковском терминале, и только после этого нажимает «Отметить оплаченным».
+            Наличные отмечаются оплаченными сразу.
+        </div>
+
+        <div class="kassa-layout">
+            <!-- ORDER BUILDER -->
+            <section class="kassa-items">
+                <h2 class="menu-cat-title">Добавить в заказ</h2>
+                <div class="kassa-controls">
+                    <input id="kassaSearch" class="kassa-search" type="text" placeholder="Поиск по меню…">
+                    <div id="kassaTabs" class="kassa-tabs"></div>
+                </div>
+                <div id="itemsGrid" class="menu-grid kassa-items-grid"></div>
+            </section>
+
+            <!-- CART + PAYMENT -->
+            <aside class="kassa-cart">
+                <h2 class="menu-cat-title">Заказ</h2>
+                <div id="cartList" class="cart-list">
+                    <p class="cart-empty">Заказ пуст — добавьте позиции слева</p>
+                </div>
+                <div class="cart-total">
+                    <span>Итого</span>
+                    <span id="cartTotal">0 сум</span>
+                </div>
+
+                <h3 class="pay-title">Способ оплаты</h3>
+                <div class="pay-methods" id="payMethods">
+                    <button class="pay-method" data-method="click">Click</button>
+                    <button class="pay-method" data-method="clickpass">Click Pass</button>
+                    <button class="pay-method" data-method="payme">Payme</button>
+                    <button class="pay-method" data-method="card">Карта (Visa / UzCard / Humo)</button>
+                    <button class="pay-method" data-method="cash">Наличные</button>
+                </div>
+
+                <div id="payInstructions" class="pay-instructions"></div>
+
+                <button id="submitOrder" class="btn kassa-submit" disabled>Оформить заказ</button>
+            </aside>
+        </div>
+
+        <section class="kassa-history">
+            <h2 class="menu-cat-title">Заказы сегодня</h2>
+            <div id="historyList" class="history-list">
+                <p class="cart-empty">Заказов пока нет</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>BOOK coffee · касса для персонала</p>
+    </footer>
+
+    <script>
+        // ===== MENU DATA (as provided by the owner, grouped for easier navigation) =====
+        const MENU = [
+            {
+                category: "Завтраки",
+                items: [
+                    { name: "English breakfast", price: 75000 },
+                    { name: "French breakfast", price: 69000 },
+                    { name: "Classic omlet", price: 55000 },
+                    { name: "Shakshuka", price: 42000 },
+                    { name: "Скрамбл с лососем", price: 55000 },
+                    { name: "Сырники", price: 45000 },
+                    { name: "Классические блинчики", price: 40000 },
+                    { name: "Блинчики с творогом", price: 55000 },
+                    { name: "Блинчики с фаршем", price: 59000 },
+                    { name: "Рисовая каша", price: 40000 },
+                    { name: "Овсяная каша", price: 40000 }
+                ]
+            },
+            {
+                category: "Салаты",
+                items: [
+                    { name: "Греческий салат", price: 50000 },
+                    { name: "Цезарь салат", price: 60000 },
+                    { name: "Салат с тунцом", price: 65000 },
+                    { name: "Салат с рукколой", price: 48000 }
+                ]
+            },
+            {
+                category: "Супы",
+                items: [
+                    { name: "Чечевичный суп", price: 40000 },
+                    { name: "Грибной суп", price: 50000 },
+                    { name: "Broccolli soup", price: 50000 }
+                ]
+            },
+            {
+                category: "Сэндвичи, боулы, поке",
+                items: [
+                    { name: "Куриный клаб сэндвич", price: 55000 },
+                    { name: "Круассан с курицей", price: 50000 },
+                    { name: "Круассан с лососем", price: 65000 },
+                    { name: "Боул с лососем", price: 55000 },
+                    { name: "Боул с курицей", price: 50000 },
+                    { name: "Боул веган", price: 47000 },
+                    { name: "Поке с лососем", price: 50000 },
+                    { name: "Поке с курицей", price: 50000 }
+                ]
+            },
+            {
+                category: "Основные блюда",
+                items: [
+                    { name: "Рис с кукурузой и горошком", price: 20000 },
+                    { name: "Альфредо фетучини", price: 75000 },
+                    { name: "Аррабиата пенне", price: 65000 },
+                    { name: "Болоньезе фетучини", price: 70000 },
+                    { name: "Kofte(cheese)", price: 80000 },
+                    { name: "Kofte", price: 80000 },
+                    { name: "2 Mini Burgers", price: 60000 },
+                    { name: "Book Burger", price: 60000 },
+                    { name: "Pizza Alfredo", price: 85000 },
+                    { name: "Qarsildoq Baqlajon", price: 65000 },
+                    { name: "Teriyaki", price: 80000 },
+                    { name: "Caesar", price: 90000 },
+                    { name: "Sousli Tovuq", price: 80000 }
+                ]
+            },
+            {
+                category: "Кофе",
+                items: [
+                    { name: "Эспрессо", price: 20000 },
+                    { name: "Американо", price: 25000 },
+                    { name: "Капучино", price: 30000 },
+                    { name: "Flat white", price: 35000 },
+                    { name: "Моккочино", price: 35000 },
+                    { name: "Раф", price: 40000 },
+                    { name: "Латте макиато", price: 30000 },
+                    { name: "Матча", price: 50000 },
+                    { name: "Айс-матча", price: 49000 },
+                    { name: "Какао", price: 30000 },
+                    { name: "Горячий шоколад", price: 30000 },
+                    { name: "Эспрессо тоник", price: 30000 },
+                    { name: "Клубника тоник", price: 30000 }
+                ]
+            },
+            {
+                category: "Чай и лимонады",
+                items: [
+                    { name: "Чай вишня-клюква", price: 35000 },
+                    { name: "Чай бергамот-малина", price: 35000 },
+                    { name: "Чай облепиха-апельсин", price: 45000 },
+                    { name: "Чай горный сбор", price: 30000 },
+                    { name: "Чай с жасмином", price: 30000 },
+                    { name: "Чай имбирь-лимон", price: 30000 },
+                    { name: "Мохито классический", price: 35000 },
+                    { name: "Мохито клубничный", price: 35000 },
+                    { name: "Голубая лагуна", price: 35000 },
+                    { name: "Имбирный лимонад", price: 35000 },
+                    { name: "Ягодный айсты", price: 35000 },
+                    { name: "Манго-маракуйя", price: 40000 },
+                    { name: "Тархун", price: 35000 }
+                ]
+            },
+            {
+                category: "Милкшейки",
+                items: [
+                    { name: "Ванильный милкшейк", price: 45000 },
+                    { name: "Шоколадный милкшейк", price: 45000 },
+                    { name: "Клубничный милкшейк", price: 45000 },
+                    { name: "Банановый милкшейк", price: 45000 },
+                    { name: "Орео милкшейк", price: 45000 }
+                ]
+            },
+            {
+                category: "Десерты",
+                items: [
+                    { name: "Медовик", price: 40000 },
+                    { name: "Сан-себастьян классический", price: 30000 },
+                    { name: "Сан-себастьян шоколадный", price: 35000 },
+                    { name: "Сан-себастьян фисташковый", price: 40000 },
+                    { name: "Круассан миндальный", price: 30000 },
+                    { name: "Круассан шоколадный", price: 35000 }
+                ]
+            }
+        ];
+
+        // Flat lookup: name -> price
+        const PRICE_MAP = {};
+        MENU.forEach(cat => cat.items.forEach(i => { PRICE_MAP[i.name] = i.price; }));
+
+        const PAY_LABELS = {
+            click: "Click",
+            clickpass: "Click Pass",
+            payme: "Payme",
+            card: "Карта",
+            cash: "Наличные"
+        };
+
+        const PAY_INSTRUCTIONS = {
+            click: `<p><strong>Click — оплата по QR на месте.</strong></p>
+                <p>Покажите клиенту постоянный QR-стикер кафе Click (получен в личном кабинете
+                <a href="https://business.click.uz" target="_blank" rel="noopener">business.click.uz</a>).
+                Клиент сканирует его приложением Click и сам вводит сумму — {total}.</p>
+                <p>Когда в приложении Click придёт уведомление о зачислении — нажмите «Отметить оплаченным».</p>`,
+            clickpass: `<p><strong>Click Pass — оплата сканером.</strong></p>
+                <p>Попросите клиента открыть Click Pass в приложении Click и показать QR.
+                Отсканируйте его выданным сканером Click Pass на сумму {total}.</p>
+                <p>После звукового подтверждения на сканере — нажмите «Отметить оплаченным».</p>`,
+            payme: `<p><strong>Payme — оплата по QR.</strong></p>
+                <p>Покажите QR-код кассы Payme (личный кабинет
+                <a href="https://business.payme.uz" target="_blank" rel="noopener">business.payme.uz</a> /
+                приложение Payme Business). Клиент сканирует и оплачивает {total} —
+                Payme принимает Uzcard, Humo и карту Payme.</p>
+                <p>Когда придёт уведомление о платеже в Payme Business — нажмите «Отметить оплаченным».</p>`,
+            card: `<p><strong>Карта — Visa / UzCard / Humo.</strong></p>
+                <p>Проведите оплату на банковском POS-терминале на сумму {total}.</p>
+                <p>После того как терминал напечатает чек об успешной оплате — нажмите «Отметить оплаченным».</p>`,
+            cash: `<p><strong>Наличные.</strong></p>
+                <p>Примите {total} наличными и выдайте сдачу. Заказ можно сразу отмечать оплаченным.</p>`
+        };
+
+        let cart = {};           // name -> qty
+        let selectedMethod = null;
+        let activeCategory = "Все";
+        let searchTerm = "";
+
+        const itemsGrid = document.getElementById('itemsGrid');
+        const tabsEl = document.getElementById('kassaTabs');
+        const searchEl = document.getElementById('kassaSearch');
+        const cartList = document.getElementById('cartList');
+        const cartTotalEl = document.getElementById('cartTotal');
+        const payMethodsEl = document.getElementById('payMethods');
+        const payInstructionsEl = document.getElementById('payInstructions');
+        const submitBtn = document.getElementById('submitOrder');
+        const historyList = document.getElementById('historyList');
+
+        function fmt(n) {
+            return n.toLocaleString('ru-RU') + ' сум';
+        }
+
+        function renderTabs() {
+            const cats = ["Все", ...MENU.map(c => c.category)];
+            tabsEl.innerHTML = cats.map(c =>
+                `<button type="button" class="kassa-tab ${c === activeCategory ? 'active' : ''}" data-cat="${c}">${c}</button>`
+            ).join('');
+            tabsEl.querySelectorAll('.kassa-tab').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    activeCategory = btn.dataset.cat;
+                    renderTabs();
+                    renderItems();
+                });
+            });
+        }
+
+        function getFilteredItems() {
+            let list = [];
+            MENU.forEach(cat => {
+                if (activeCategory !== "Все" && cat.category !== activeCategory) return;
+                cat.items.forEach(i => list.push(i));
+            });
+            if (searchTerm.trim()) {
+                const t = searchTerm.trim().toLowerCase();
+                list = list.filter(i => i.name.toLowerCase().includes(t));
+            }
+            return list;
+        }
+
+        function renderItems() {
+            const list = getFilteredItems();
+            if (list.length === 0) {
+                itemsGrid.innerHTML = '<p class="kassa-empty-state">Ничего не найдено</p>';
+                return;
+            }
+            itemsGrid.innerHTML = '';
+            list.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'menu-item kassa-pick hvr-float-shadow';
+                card.innerHTML = `
+                    <div class="menu-item-top">
+                        <span class="menu-item-name">${item.name}</span>
+                        <span class="menu-item-price">${fmt(item.price)}</span>
+                    </div>
+                    <button class="btn kassa-add-btn" type="button">Добавить</button>
+                `;
+                card.querySelector('.kassa-add-btn').addEventListener('click', () => {
+                    cart[item.name] = (cart[item.name] || 0) + 1;
+                    renderCart();
+                });
+                itemsGrid.appendChild(card);
+            });
+        }
+
+        searchEl.addEventListener('input', () => {
+            searchTerm = searchEl.value;
+            renderItems();
+        });
+
+        function getTotal() {
+            let total = 0;
+            for (const name in cart) {
+                total += (PRICE_MAP[name] || 0) * cart[name];
+            }
+            return total;
+        }
+
+        function renderCart() {
+            const names = Object.keys(cart);
+            if (names.length === 0) {
+                cartList.innerHTML = '<p class="cart-empty">Заказ пуст — добавьте позиции слева</p>';
+            } else {
+                cartList.innerHTML = names.map(name => {
+                    const price = PRICE_MAP[name] || 0;
+                    const qty = cart[name];
+                    return `
+                        <div class="cart-row">
+                            <span class="cart-row-name">${name} × ${qty}</span>
+                            <span class="cart-row-price">${fmt(price * qty)}</span>
+                            <div class="cart-row-actions">
+                                <button type="button" data-name="${name}" class="cart-minus">−</button>
+                                <button type="button" data-name="${name}" class="cart-plus">+</button>
+                                <button type="button" data-name="${name}" class="cart-remove">✕</button>
+                            </div>
+                        </div>`;
+                }).join('');
+                cartList.querySelectorAll('.cart-plus').forEach(b => b.addEventListener('click', e => {
+                    cart[e.target.dataset.name]++;
+                    renderCart();
+                }));
+                cartList.querySelectorAll('.cart-minus').forEach(b => b.addEventListener('click', e => {
+                    const n = e.target.dataset.name;
+                    cart[n]--;
+                    if (cart[n] <= 0) delete cart[n];
+                    renderCart();
+                }));
+                cartList.querySelectorAll('.cart-remove').forEach(b => b.addEventListener('click', e => {
+                    delete cart[e.target.dataset.name];
+                    renderCart();
+                }));
+            }
+            const total = getTotal();
+            cartTotalEl.textContent = fmt(total);
+            updatePayInstructions();
+            updateSubmitState();
+        }
+
+        function updatePayInstructions() {
+            if (!selectedMethod) {
+                payInstructionsEl.innerHTML = '';
+                return;
+            }
+            const total = fmt(getTotal());
+            payInstructionsEl.innerHTML = PAY_INSTRUCTIONS[selectedMethod].replaceAll('{total}', total);
+        }
+
+        function updateSubmitState() {
+            const hasItems = Object.keys(cart).length > 0;
+            submitBtn.disabled = !(hasItems && selectedMethod);
+            submitBtn.textContent = selectedMethod === 'cash'
+                ? 'Оформить и отметить оплаченным'
+                : 'Оформить заказ (ожидает оплаты)';
+        }
+
+        payMethodsEl.querySelectorAll('.pay-method').forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedMethod = btn.dataset.method;
+                payMethodsEl.querySelectorAll('.pay-method').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                updatePayInstructions();
+                updateSubmitState();
+            });
+        });
+
+        function loadOrders() {
+            try {
+                return JSON.parse(localStorage.getItem('book_kassa_orders') || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveOrders(orders) {
+            try {
+                localStorage.setItem('book_kassa_orders', JSON.stringify(orders));
+            } catch (e) { /* storage unavailable, ignore */ }
+        }
+
+        function renderHistory() {
+            const orders = loadOrders();
+            if (orders.length === 0) {
+                historyList.innerHTML = '<p class="cart-empty">Заказов пока нет</p>';
+                return;
+            }
+            historyList.innerHTML = orders.slice().reverse().map(o => `
+                <div class="history-row ${o.paid ? 'is-paid' : 'is-pending'}">
+                    <div class="history-main">
+                        <span class="history-time">${o.time}</span>
+                        <span class="history-items">${o.itemsText}</span>
+                        <span class="history-total">${fmt(o.total)}</span>
+                        <span class="history-method">${PAY_LABELS[o.method]}</span>
+                    </div>
+                    <div class="history-status">
+                        ${o.paid
+                    ? '<span class="status-paid">✓ Оплачено</span>'
+                    : `<button type="button" class="status-mark" data-id="${o.id}">Отметить оплаченным</button>`}
+                    </div>
+                </div>
+            `).join('');
+            historyList.querySelectorAll('.status-mark').forEach(b => {
+                b.addEventListener('click', () => {
+                    const orders = loadOrders();
+                    const o = orders.find(x => x.id === b.dataset.id);
+                    if (o) o.paid = true;
+                    saveOrders(orders);
+                    renderHistory();
+                });
+            });
+        }
+
+        submitBtn.addEventListener('click', () => {
+            if (submitBtn.disabled) return;
+            const total = getTotal();
+            const itemsText = Object.keys(cart).map(n => `${n} ×${cart[n]}`).join(', ');
+            const order = {
+                id: Date.now().toString(36),
+                time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                itemsText,
+                total,
+                method: selectedMethod,
+                paid: selectedMethod === 'cash'
+            };
+            const orders = loadOrders();
+            orders.push(order);
+            saveOrders(orders);
+
+            cart = {};
+            selectedMethod = null;
+            payMethodsEl.querySelectorAll('.pay-method').forEach(b => b.classList.remove('active'));
+            renderCart();
+            renderHistory();
+        });
+
+        renderTabs();
+        renderItems();
+        renderCart();
+        renderHistory();
+    </script>
+</body>
+
+</html>
